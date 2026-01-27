@@ -1,2 +1,2 @@
-# free
-All Free Apps
+# pkmetacodefree
+free apps for Odoo ERP you can use.
