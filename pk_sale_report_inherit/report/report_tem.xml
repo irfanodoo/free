@@ -1,0 +1,213 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <!--   custom header and footer replace section for the boxed layout-->
+    <template id="header_report_id" inherit_id="web.external_layout_boxed">
+        <xpath expr="//div[@t-att-style='report_header_style']" position="replace">
+            <t t-foreach="docs" t-as="o">
+                <div class="header">
+                    <div class="row col-12">
+                        <div align="left" class="col-2">
+                            <img t-if="res_company.logo"
+                                 t-att-src="image_data_uri(res_company.logo)"
+                                 style="height: auto; width: 100%; max-width: 100%; max-height: 150px;"
+                                 alt="Logo"/>
+                        </div>
+                        <div align="left" class="col-4"></div>
+
+                        <div class="col-6" align="right" name="company_address">
+                            <ul class="list-unstyled">
+                                <li t-if="company.is_company_details_empty">
+                                    <t t-esc="company.partner_id"
+                                       t-options='{"widget": "contact", "fields": ["address", "name"], "no_marker": true}'/>
+                                </li>
+                                <li t-else="">
+                                    <t t-esc="company.company_details"/>
+                                </li>
+                                <li t-if="forced_vat">
+                                    <t t-esc="company.country_id.vat_label or 'Tax ID'"/>:
+                                    <span t-esc="forced_vat"/>
+                                </li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="footer">
+                    <style>
+                        .custom_footer {
+                        border-top: 1px solid black;
+                        padding-top: 5px;
+                        width: 100%;
+                        display: flex;
+                        justify-content: space-between;
+                        align-items: center;
+                        }
+                    </style>
+                    <div class="custom_footer">
+                        <!-- Dynamic company footer info -->
+                        <div t-if="res_company.report_footer">
+                            <t t-raw="res_company.report_footer"/>
+                        </div>
+                        <div class="text-muted" align="right">
+                            Page:
+                            <span class="page"/>
+                            /
+                            <span class="topage"/>
+                        </div>
+                    </div>
+                </div>
+            </t>
+        </xpath>
+    </template>
+
+
+    <!--    sale template inherit cand change made -->
+    <template id="report_saleorder_document_inherit_custom" inherit_id="sale.report_saleorder_document">
+        <xpath expr="//div[@t-field='doc.partner_id']" position="replace"/>
+        <xpath expr="//div[@t-field='doc.partner_invoice_id']" position="replace"/>
+        <xpath expr="//t/t[4]" position="replace"/>
+
+        <!-- MAKE the main order table bordered -->
+        <xpath expr="//t/div[hasclass('page')]/table" position="replace">
+            <table class="table   table-bordered border-dark  ">
+                <!-- In case we want to repeat the header, remove "display: table-row-group" -->
+                <thead style="display: table-row-group">
+                    <tr>
+                        <th name="th_description" class="text-start">Description</th>
+                        <th name="th_quantity" class="text-end">Quantity</th>
+                        <th name="th_priceunit" class="text-end">Unit Price</th>
+                        <th name="th_discount" t-if="display_discount" class="text-end">
+                            <span>Disc.%</span>
+                        </th>
+                        <th name="th_taxes" class="text-end">Taxes</th>
+                        <th name="th_subtotal" class="text-end">
+                            <span groups="account.group_show_line_subtotals_tax_excluded">Amount</span>
+                            <span groups="account.group_show_line_subtotals_tax_included">Total Price</span>
+                        </th>
+                    </tr>
+                </thead>
+                <tbody class="sale_tbody table-border border-black">
+
+                    <t t-set="current_subtotal" t-value="0"/>
+
+                    <t t-foreach="lines_to_report" t-as="line">
+
+                        <t t-set="current_subtotal" t-value="current_subtotal + line.price_subtotal"
+                           groups="account.group_show_line_subtotals_tax_excluded"/>
+                        <t t-set="current_subtotal" t-value="current_subtotal + line.price_total"
+                           groups="account.group_show_line_subtotals_tax_included"/>
+
+                        <tr t-att-class="'bg-200 fw-bold o_line_section' if line.display_type == 'line_section' else 'fst-italic o_line_note' if line.display_type == 'line_note' else ''">
+                            <t t-if="not line.display_type">
+                                <td name="td_name">
+                                    <span t-field="line.name"/>
+                                </td>
+                                <td name="td_quantity" class="text-end">
+                                    <span t-field="line.product_uom_qty"/>
+                                    <span t-field="line.product_uom"/>
+                                </td>
+                                <td name="td_priceunit" class="text-end">
+                                    <span t-field="line.price_unit"/>
+                                </td>
+                                <td t-if="display_discount" class="text-end">
+                                    <span t-field="line.discount"/>
+                                </td>
+                                <td name="td_taxes" class="text-end">
+                                    <span t-out="', '.join(map(lambda x: (x.description or x.name), line.tax_id))"/>
+                                </td>
+                                <td t-if="not line.is_downpayment" name="td_subtotal" class="text-end o_price_total">
+                                    <span t-field="line.price_subtotal"
+                                          groups="account.group_show_line_subtotals_tax_excluded"/>
+                                    <span t-field="line.price_total"
+                                          groups="account.group_show_line_subtotals_tax_included"/>
+                                </td>
+                            </t>
+                            <t t-elif="line.display_type == 'line_section'">
+                                <td name="td_section_line" colspan="99">
+                                    <span t-field="line.name"/>
+                                </td>
+                                <t t-set="current_section" t-value="line"/>
+                                <t t-set="current_subtotal" t-value="0"/>
+                            </t>
+                            <t t-elif="line.display_type == 'line_note'">
+                                <td name="td_note_line" colspan="99">
+                                    <span t-field="line.name"/>
+                                </td>
+                            </t>
+                        </tr>
+
+                        <t t-if="current_section and (line_last or doc.order_line[line_index+1].display_type == 'line_section') and not line.is_downpayment">
+                            <tr class="is-subtotal text-end">
+                                <td name="td_section_subtotal" colspan="99">
+                                    <strong class="mr16">Subtotal</strong>
+                                    <span
+                                            t-out="current_subtotal"
+                                            t-options='{"widget": "monetary", "display_currency": doc.pricelist_id.currency_id}'
+                                    />
+                                </td>
+                            </tr>
+                        </t>
+                    </t>
+                </tbody>
+            </table>
+
+
+        </xpath>
+
+
+        <xpath expr="//t//div[hasclass('clearfix')]" position="replace">
+            <div class="clearfix" name="so_total_summary">
+                <div id="total" class="row" name="total">
+                    <div t-attf-class="#{'col-6' if report_type != 'html' else 'col-sm-7 col-md-6'} ms-auto">
+                        <table class="table table-sm table-bordered border-dark">
+                            <!-- Tax totals -->
+                            <t t-set="tax_totals" t-value="doc.tax_totals"/>
+                            <t t-call="account.document_tax_totals"/>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+        </xpath>
+
+        <!-- ADD Customer Bank Account Details before payment terms -->
+        <xpath expr="//div/p[span[@t-field='doc.payment_term_id.note']]" position="replace">
+            <div class="mt-5" style="min-height:200px;"> <!-- Adjust min-height if needed -->
+
+                <div style="margin-top: auto;">
+                    <t t-if="doc.partner_id.bank_ids">
+                        <strong class="d-block mb-2">Customer Bank Account Details:</strong>
+                        <ul class="list-unstyled mb-3">
+                            <t t-foreach="doc.partner_id.bank_ids" t-as="bank">
+                                <li class="mb-2">
+                                    <t t-if="bank.acc_number">
+                                        <strong>Bank Account Title:</strong>
+                                        <t t-esc="bank.acc_number"/>
+                                    </t>
+                                    <br t-if="bank.bank_id.name or bank.bank_id.bic"/>
+                                    <t t-if="bank.bank_id.name">
+                                        <strong>Bank Name:</strong>
+                                        <t t-esc="bank.bank_id.name"/>
+                                    </t>
+                                    <br t-if="bank.bank_id.bic"/>
+                                    <t t-if="bank.bank_id.bic">
+                                        <strong>Bank Account No:</strong>
+                                        <t t-esc="bank.bank_id.bic"/>
+                                    </t>
+                                </li>
+                            </t>
+                        </ul>
+                    </t>
+
+                    <div class="text-danger mb-1">This is computer generated document hence no signature required</div>
+
+                    <div class="mb-1">
+                        <t t-out="doc.payment_term_id.note"/>
+                    </div>
+                </div>
+
+            </div>
+        </xpath>
+
+    </template>
+</odoo>

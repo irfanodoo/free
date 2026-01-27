@@ -1,0 +1,51 @@
+<!-- my_module/views/my_model_views.xml -->
+<odoo>
+    <record id="view_price_code_form" model="ir.ui.view">
+        <field name="name">price.code.form</field>
+        <field name="model">price.code</field>
+        <field name="arch" type="xml">
+            <form string="My Model">
+                <sheet>
+                    <group>
+                        <field name="price_code"/>
+                        <field name="price"/>
+<!--                        <field name="currency_id"/>-->
+                    </group>
+                </sheet>
+                <div class="oe_chatter">
+                        <field name="message_follower_ids" widget="mail_followers"/>
+                        <field name="message_ids" widget="mail_thread"/>
+                    </div>
+            </form>
+        </field>
+    </record>
+
+    <record id="view_price_code_tree" model="ir.ui.view">
+        <field name="name">price.code.tree</field>
+        <field name="model">price.code</field>
+        <field name="arch" type="xml">
+            <tree string="Price Code">
+                <field name="price_code"/>
+                <field name="price"/>
+<!--                <field name="currency_id"/>-->
+            </tree>
+        </field>
+    </record>
+
+    <record id="action_price_code_id" model="ir.actions.act_window">
+        <field name="name">Price Code</field>
+        <field name="res_model">price.code</field>
+        <field name="view_mode">tree,form</field>
+    </record>
+
+    <menuitem id="menu_my_module_root" name="Price Code" sequence="10"/>
+    <menuitem id="price_code_inventory" name="Price Code"
+              parent="stock.menu_stock_inventory_control"
+              action="action_price_code_id" />
+    <menuitem id="price_code_purchase" name="Price Code"
+              parent="purchase.menu_purchase_products"
+              action="action_price_code_id"  />
+    <menuitem id="price_code_sale" name="Price Code"
+              parent="sale.product_menu_catalog"
+              action="action_price_code_id" />
+</odoo>

@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<odoo>
+    <record id="view_product_template_form_inherit_code" model="ir.ui.view">
+        <field name="name">product.template.form.inherit.code</field>
+        <field name="model">product.template</field>
+        <field name="inherit_id" ref="product.product_template_only_form_view"/>
+        <field name="arch" type="xml">
+            <xpath expr="//field[@name='default_code']" position="after">
+                <field name="price_code" placeholder="Enter Code for Price Sync"/>
+                <field name="e_code" placeholder="Enter Embroidery Code"/>
+                <field name="h_code" placeholder="Enter Handmade Embroidery"/>
+            </xpath>
+        </field>
+    </record>
+
+
+</odoo>
